@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using Com.Gshis.Services;
 using Grpc.Core;
+using Consul;
 
 namespace Service1Server
 {
@@ -10,20 +11,51 @@ namespace Service1Server
     {
         static void Main(string[] args)
         {
-            string ip = GetFirstIp4();
-
-            Server server = new Server
+            string needDeregisterServiceId="";
+            try
             {
-                Services = { Service1.BindService(new Service1Imp()) },
-                Ports = { new ServerPort(ip, 0, ServerCredentials.Insecure) }
-            };
-            server.Start();
-            var firstPort = server.Ports.First();
-            Console.WriteLine($"Greeter server listening on {firstPort.Host} port {firstPort.BoundPort}");
-            Console.WriteLine("Press any key to stop the server...");
-            Console.ReadKey();
+                //start service
+                string ip = GetFirstIp4();
 
-            server.ShutdownAsync().Wait();
+                Server server = new Server
+                {
+                    Services = { Service1.BindService(new Service1Imp()) },
+                    Ports = { new ServerPort(ip, 0, ServerCredentials.Insecure) }
+                };
+                server.Start();
+                var firstPort = server.Ports.First().BoundPort;
+                //register service
+                ConsulClient client = new ConsulClient();
+                var serviceInfo = new AgentServiceRegistration
+                {
+                    ID = $"Service1_{ip}:{firstPort}",
+                    Name = $"Service1",
+                    Address = ip,
+                    Port = firstPort,
+                    Check = new AgentServiceCheck
+                    {
+                        Interval = TimeSpan.FromSeconds(5),
+                        Timeout = TimeSpan.FromSeconds(3),
+                        TCP = $"{ip}:{firstPort}"
+                    }
+                };
+                client.Agent.ServiceRegister(serviceInfo);
+                needDeregisterServiceId = serviceInfo.ID;
+
+                Console.WriteLine($"Greeter server listening on {ip} port {firstPort}");
+                Console.WriteLine("Press any key to stop the server...");
+                Console.ReadKey();
+
+                server.ShutdownAsync().Wait();
+            } finally
+            {
+                //deregister service
+                if (!string.IsNullOrEmpty(needDeregisterServiceId))
+                {
+                    ConsulClient client = new ConsulClient();
+                    client.Agent.ServiceDeregister(needDeregisterServiceId);
+                }
+            }
         }
         private static string GetFirstIp4()
         {
