@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package Com.Gshis.Services;
+
+service Service1{
+	rpc Hello1(HelloRequest) returns (HelloResponse){}
+}
+
+message HelloRequest{
+	string name = 1;
+}
+message HelloResponse{
+	string message = 1;
+}
