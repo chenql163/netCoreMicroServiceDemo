@@ -1,0 +1,16 @@
+syntax = "proto3";
+package Com.Gshis.Services;
+
+service LoginService{
+	rpc Login(LoginRequest) returns(LoginResponse);
+}
+message LoginRequest{
+	string Hid = 1;
+	string UserName = 2;
+	string Password = 3;
+}
+message LoginResponse{
+	bool Success = 1;
+	string ErrMsg = 2;
+	string Token = 3;
+}
