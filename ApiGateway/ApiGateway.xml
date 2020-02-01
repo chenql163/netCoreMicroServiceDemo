@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ApiGateway</name>
+    </assembly>
+    <members>
+        <member name="T:ApiGateway.Controllers.WeatherForecastController">
+            <summary>
+            获取天气预报
+            </summary>
+        </member>
+        <member name="M:ApiGateway.Controllers.WeatherForecastController.Get">
+            <summary>
+            获取天气预报
+            </summary>
+            <returns>天气预报</returns>
+        </member>
+    </members>
+</doc>
